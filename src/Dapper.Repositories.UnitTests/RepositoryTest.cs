@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
+    using Castle.Components.DictionaryAdapter.Xml;
     using Dapper.Contrib.Extensions.Fakes;
     using Dapper.Repositories.UnitTests.Mocks;
     using Microsoft.QualityTools.Testing.Fakes;
@@ -17,13 +18,17 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void ConstructorShouldThrowException()
+        public void ConstructorShouldThrowExceptionNullConnection()
         {
             // arrange
             // nothing to arrange
 
+
             // act
-            var repository = new Repository<TestEntity>(null);
+            // ReSharper disable once UnusedVariable
+            using (var repository = new Repository<TestEntity>(null))
+            {
+            }
 
             // assert
             // should throw exception
@@ -31,13 +36,16 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void ConstructorShouldThrowExceptionSecond()
+        public void ConstructorShouldThrowExceptionNullConnectionNullTransaction()
         {
             // arrange
-            var transaction = new Mock<IDbTransaction>();
+            // nothing to arrange
 
             // act
-            var repository = new Repository<TestEntity>(null, transaction.Object);
+            // ReSharper disable once UnusedVariable
+            using (var repository = new Repository<TestEntity>(null, null))
+            {
+            }
 
             // assert
             // should throw exception
@@ -433,6 +441,21 @@
                 Assert.AreEqual(1, store.Count);
                 CollectionAssert.AreEqual(expected, store, new TestEntityComparer());
             }
+        }
+
+        public void FinalizerShouldBeInvokedButNotDispose()
+        {
+            var connection = new Mock<IDbConnection>();
+            connection.Setup(c => c.Dispose()).Verifiable();
+
+            var repository = new Mock<Repository<TestEntity>>(connection.Object);
+            repository.Setup(r => r.Dispose()).Verifiable();
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            repository.Verify(r => r.Dispose(), Times.Never);
+            repository.Verify(c => c.Dispose(), Times.Never);
         }
     }
 }

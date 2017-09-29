@@ -13,30 +13,33 @@
         public void CreateShouldThrowArgumentNullException()
         {
             // arrange
-            var factory = new RepositoryFactory();
+            using (var factory = new RepositoryFactory())
+            {
+                // act
+                factory.Create<object>(null);
 
-            // act
-            factory.Create<object>(null);
-
-            // assert
-            // should throw exception
+                // assert
+                // should throw exception
+            }
         }
 
         [TestMethod]
         public void CreateShouldReturnInstance()
         {
             // arrange
-            var factory = new RepositoryFactory();
-            var connection = new Mock<IDbConnection>();
-            var transaction = new Mock<IDbTransaction>();
-            
-            // act
-            var repository = factory.Create<object>(connection.Object, transaction.Object);
+            using (var factory = new RepositoryFactory())
+            {
+                var connection = new Mock<IDbConnection>();
+                var transaction = new Mock<IDbTransaction>();
 
-            // assert
-            transaction.Verify();
-            connection.Verify();
-            Assert.IsNotNull(repository);
+                // act
+                var repository = factory.Create<object>(connection.Object, transaction.Object);
+
+                // assert
+                transaction.Verify();
+                connection.Verify();
+                Assert.IsNotNull(repository);
+            }
         }
     }
 }

@@ -13,32 +13,35 @@
         public void CreateShouldThrowArgumentNullException()
         {
             // arrange
-            var factory = new UnitOfWorkFactory();
+            using (var factory = new UnitOfWorkFactory())
+            {
+                // act
+                factory.Create(null);
 
-            // act
-            factory.Create(null);
-
-            // assert
-            // should throw exception
+                // assert
+                // should throw exception
+            }
         }
-        
+
         [TestMethod]
         public void CreateShouldReturnInstance()
         {
             // arrange
-            var factory = new UnitOfWorkFactory();
-            var connection = new Mock<IDbConnection>();
-            var transaction = new Mock<IDbTransaction>();
-            
-            connection.Setup(cn => cn.BeginTransaction()).Returns(transaction.Object).Verifiable();
-            
-            // act
-            var unitOfWork = factory.Create(connection.Object);
+            using (var factory = new UnitOfWorkFactory())
+            {
+                var connection = new Mock<IDbConnection>();
+                var transaction = new Mock<IDbTransaction>();
 
-            // assert
-            connection.Verify();
-            transaction.Verify();
-            Assert.IsNotNull(unitOfWork, "TEST FAILED: did not create a UnitOfWork");
+                connection.Setup(cn => cn.BeginTransaction()).Returns(transaction.Object).Verifiable();
+
+                // act
+                var unitOfWork = factory.Create(connection.Object);
+
+                // assert
+                connection.Verify();
+                transaction.Verify();
+                Assert.IsNotNull(unitOfWork, "TEST FAILED: did not create a UnitOfWork");
+            }
         }
     }
 }
