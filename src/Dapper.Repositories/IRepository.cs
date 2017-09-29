@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
 
-    public interface IRepository<TEntity> where TEntity : class, new()
+    public interface IRepository<TEntity> : IDisposable where TEntity : class, new()
     {
         TEntity Get(object id, int? timeout = null);
 

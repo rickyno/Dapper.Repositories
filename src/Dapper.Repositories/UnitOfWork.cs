@@ -8,6 +8,7 @@
         private readonly IRepositoryFactory repositoryFactory;
         private readonly IDbConnection connection;
         private readonly IDbTransaction transaction;
+        private bool disposed;
 
         public UnitOfWork(IDbConnection connection)
         {
@@ -16,19 +17,43 @@
             this.repositoryFactory = new RepositoryFactory();
         }
 
-        public IRepository<TEntity> Repository<TEntity>() where TEntity : class, new()
+        ~UnitOfWork()
+        {
+            this.Dispose(false);
+        }
+
+        public virtual IRepository<TEntity> Repository<TEntity>() where TEntity : class, new()
         {
             return this.repositoryFactory.Create<TEntity>(this.connection, this.transaction);
         }
 
-        public void Commit()
+        public virtual void Commit()
         {
-            this.transaction.Commit();
+            this.transaction?.Commit();
         }
 
-        public void Rollback()
+        public virtual void Rollback()
         {
-            this.transaction.Rollback();
+            this.transaction?.Rollback();
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            transaction?.Dispose();
+            connection?.Dispose();
+            repositoryFactory?.Dispose();
+            this.disposed = true;
         }
     }
 }

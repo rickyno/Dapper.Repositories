@@ -1,6 +1,7 @@
 ﻿namespace Dapper.Repositories
 {
-    public interface IUnitOfWork
+    using System;
+    public interface IUnitOfWork : IDisposable
     {
         IRepository<TEntity> Repository<TEntity>() where TEntity : class, new();
 

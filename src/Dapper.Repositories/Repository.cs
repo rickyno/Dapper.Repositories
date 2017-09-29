@@ -10,6 +10,7 @@
     {
         private readonly IDbConnection connection;
         private readonly IDbTransaction transaction;
+        private bool disposed;
 
         public Repository(IDbConnection connection, IDbTransaction transaction = null)
         {
@@ -17,12 +18,17 @@
             this.transaction = transaction;
         }
 
-        public TEntity Get(object id, int? timeout = null)
+        ~Repository()
+        {
+            this.Dispose(false);
+        }
+
+        public virtual TEntity Get(object id, int? timeout = null)
         {
             return this.connection.Get<TEntity>(id, this.transaction, timeout);
         }
 
-        public IEnumerable<TEntity> Query(Func<TEntity, bool> filter = null, int? skip = null, int? take = null, int? timeout = null)
+        public virtual IEnumerable<TEntity> Query(Func<TEntity, bool> filter = null, int? skip = null, int? take = null, int? timeout = null)
         {
             var query = this.connection.GetAll<TEntity>(this.transaction, timeout);
 
@@ -41,34 +47,52 @@
             return query;
         }
 
-        public void Add(TEntity entity, int? timeout = null)
+        public virtual void Add(TEntity entity, int? timeout = null)
         {
             this.connection.Insert(entity, this.transaction, timeout);
         }
 
-        public void Add(IEnumerable<TEntity> entities, int? timeout = null)
+        public virtual void Add(IEnumerable<TEntity> entities, int? timeout = null)
         {
             this.connection.Insert(entities, this.transaction, timeout);
         }
 
-        public void Update(TEntity entity, int? timeout = null)
+        public virtual void Update(TEntity entity, int? timeout = null)
         {
             this.connection.Update(entity, this.transaction, timeout);
         }
 
-        public void Update(IEnumerable<TEntity> entities, int? timeout = null)
+        public virtual void Update(IEnumerable<TEntity> entities, int? timeout = null)
         {
             this.connection.Update(entities, this.transaction, timeout);
         }
 
-        public void Delete(TEntity entity, int? timeout = null)
+        public virtual void Delete(TEntity entity, int? timeout = null)
         {
             this.connection.Delete(entity, this.transaction, timeout);
         }
 
-        public void Delete(IEnumerable<TEntity> entities, int? timeout = null)
+        public virtual void Delete(IEnumerable<TEntity> entities, int? timeout = null)
         {
             this.connection.Delete(entities, this.transaction, timeout);
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            this.transaction?.Dispose();
+            this.connection?.Dispose();
+            this.disposed = true;
         }
     }
 }
