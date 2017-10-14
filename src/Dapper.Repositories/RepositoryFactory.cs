@@ -2,6 +2,7 @@
 {
     using System;
     using System.Data;
+    using System.Diagnostics.CodeAnalysis;
 
     public class RepositoryFactory : IRepositoryFactory
     {
@@ -15,17 +16,20 @@
             return new Repository<TEntity>(connection, transaction);
         }
 
+        [ExcludeFromCodeCoverage]
         ~RepositoryFactory()
         {
             this.Dispose(false);
         }
 
+        [ExcludeFromCodeCoverage]
         public void Dispose()
         {
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        [ExcludeFromCodeCoverage]
         protected virtual void Dispose(bool disposing)
         {
         }

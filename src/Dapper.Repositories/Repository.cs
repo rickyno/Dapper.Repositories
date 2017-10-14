@@ -3,14 +3,14 @@
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Dapper.Contrib.Extensions;
 
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : class, new()
     {
-        private readonly IDbConnection connection;
-        private readonly IDbTransaction transaction;
-        private bool disposed;
+        private IDbConnection connection;
+        private IDbTransaction transaction;
 
         public Repository(IDbConnection connection, IDbTransaction transaction = null)
         {
@@ -18,6 +18,7 @@
             this.transaction = transaction;
         }
 
+        [ExcludeFromCodeCoverage]
         ~Repository()
         {
             this.Dispose(false);
@@ -77,22 +78,25 @@
             this.connection.Delete(entities, this.transaction, timeout);
         }
 
+        [ExcludeFromCodeCoverage]
         public void Dispose()
         {
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        [ExcludeFromCodeCoverage]
         protected virtual void Dispose(bool disposing)
         {
-            if (this.disposed)
+            if (!disposing)
             {
                 return;
             }
 
             this.transaction?.Dispose();
             this.connection?.Dispose();
-            this.disposed = true;
+            this.transaction = null;
+            this.connection = null;
         }
     }
 }

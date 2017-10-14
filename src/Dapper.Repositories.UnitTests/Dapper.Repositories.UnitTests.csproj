@@ -71,6 +71,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Mocks\TestDatabase.cs" />
     <Compile Include="Mocks\TestEntity.cs" />
     <Compile Include="Mocks\TestEntityComparer.cs" />
     <Compile Include="UnitOfWorkTest.cs" />
@@ -78,6 +79,7 @@
     <Compile Include="RepositoryTest.cs" />
     <Compile Include="RepositoryFactoryTest.cs" />
     <Compile Include="UnitOfWorkFactoryTest.cs" />
+    <Compile Include="ConnectionFactoryTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Fakes Include="Fakes\Dapper.Contrib.fakes" />
