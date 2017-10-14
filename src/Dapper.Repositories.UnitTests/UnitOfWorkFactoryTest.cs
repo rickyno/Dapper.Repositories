@@ -10,10 +10,12 @@
     {
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void CreateShouldThrowArgumentNullException()
+        public void Create_ShouldThrowArgumentNullException()
         {
             // arrange
-            using (var factory = new UnitOfWorkFactory())
+            var repositoryFactoryMock = new Mock<IRepositoryFactory>();
+
+            using (var factory = new UnitOfWorkFactory(repositoryFactoryMock.Object))
             {
                 // act
                 factory.Create(null);
@@ -24,23 +26,22 @@
         }
 
         [TestMethod]
-        public void CreateShouldReturnInstance()
+        public void Create_ShouldReturnInstance()
         {
             // arrange
-            using (var factory = new UnitOfWorkFactory())
+            var repositoryFactoryMock = new Mock<IRepositoryFactory>();
+            var connectionMock = new Mock<IDbConnection>();
+            var transactionMock = new Mock<IDbTransaction>();
+
+            connectionMock.Setup(c => c.BeginTransaction()).Returns(transactionMock.Object);
+
+            using (var factory = new UnitOfWorkFactory(repositoryFactoryMock.Object))
             {
-                var connection = new Mock<IDbConnection>();
-                var transaction = new Mock<IDbTransaction>();
-
-                connection.Setup(cn => cn.BeginTransaction()).Returns(transaction.Object).Verifiable();
-
                 // act
-                var unitOfWork = factory.Create(connection.Object);
+                var unitOfWork = factory.Create(connectionMock.Object);
 
                 // assert
-                connection.Verify();
-                transaction.Verify();
-                Assert.IsNotNull(unitOfWork, "TEST FAILED: did not create a UnitOfWork");
+                Assert.IsNotNull(unitOfWork);
             }
         }
     }

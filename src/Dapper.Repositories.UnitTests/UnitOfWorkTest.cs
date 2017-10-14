@@ -2,6 +2,7 @@
 {
     using System;
     using System.Data;
+    using Dapper.Repositories.UnitTests.Mocks;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
 
@@ -10,14 +11,14 @@
     {
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void ConstructorShouldThrowException()
+        public void Constructor_ShouldThrowException()
         {
             // arrange
             // nothing to arrange
             
             // act
             // ReSharper disable once UnusedVariable
-            using (var unitOfWork = new UnitOfWork(null))
+            using (var unitOfWork = new UnitOfWork(null, null))
             {
             }
 
@@ -26,112 +27,118 @@
         }
 
         [TestMethod]
-        public void RepositoryShouldReturnInstance()
+        public void Repository_ShouldReturnInstance()
         {
             // arrange
-            var connection = new Mock<IDbConnection>();
-            var transaction = new Mock<IDbTransaction>();
+            var connectionMock = new Mock<IDbConnection>();
+            var transactionMock = new Mock<IDbTransaction>();
+            var repositoryFactoryMock = new Mock<IRepositoryFactory>();
+            var repositoryMock = new Mock<IRepository<TestEntity>>();
 
-            connection.Setup(c => c.BeginTransaction()).Returns(transaction.Object).Verifiable();
+            connectionMock.Setup(c => c.BeginTransaction()).Returns(transactionMock.Object).Verifiable();
+            repositoryFactoryMock.Setup(c => c.Create<TestEntity>(connectionMock.Object, transactionMock.Object)).Returns(repositoryMock.Object).Verifiable();
 
-            using (var unitOfWork = new UnitOfWork(connection.Object))
+            // act
+            using (var unitOfWork = new UnitOfWork(repositoryFactoryMock.Object, connectionMock.Object))
             {
-                // act
-                using (var repository = unitOfWork.Repository<object>())
-                {
-                    // assert
-                    connection.Verify();
-                    Assert.IsNotNull(repository);
-                }
+                var repository = unitOfWork.Repository<TestEntity>();
+
+                // assert
+                connectionMock.Verify();
+                repositoryFactoryMock.Verify();
+
+                Assert.IsNotNull(repository);
+                Assert.AreSame(repository, repositoryMock.Object);
             }
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
-        public void CommitShouldThrowException()
+        public void Commit_ShouldThrowException()
         {
             // arrange
-            var connection = new Mock<IDbConnection>();
-            var transaction = new Mock<IDbTransaction>();
+            var connectionMock = new Mock<IDbConnection>();
+            var transactionMock = new Mock<IDbTransaction>();
+            var repositoryFactoryMock = new Mock<IRepositoryFactory>();
 
-            transaction.Setup(t => t.Commit()).Throws<InvalidOperationException>().Verifiable();
-            connection.Setup(c => c.BeginTransaction()).Returns(transaction.Object).Verifiable();
+            connectionMock.Setup(c => c.BeginTransaction()).Returns(transactionMock.Object).Verifiable();
+            transactionMock.Setup(t => t.Commit()).Throws<InvalidOperationException>().Verifiable();
 
-            using (var unitOfWork = new UnitOfWork(connection.Object))
+            using (var unitOfWork = new UnitOfWork(repositoryFactoryMock.Object, connectionMock.Object))
             {
                 // act
                 unitOfWork.Commit();
 
                 // assert
-                connection.Verify();
-                transaction.Verify();
+                connectionMock.Verify();
+                transactionMock.Verify();
             }
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
-        public void RollbackShouldThrowException()
+        public void Rollback_ShouldThrowException()
         {
             // arrange
-            var connection = new Mock<IDbConnection>();
-            var transaction = new Mock<IDbTransaction>();
+            var connectionMock = new Mock<IDbConnection>();
+            var transactionMock = new Mock<IDbTransaction>();
+            var repositoryFactoryMock = new Mock<IRepositoryFactory>();
 
-            //transaction.SetupGet(t => t.Connection).Returns(connection.Object).Verifiable();
-            transaction.Setup(t => t.Rollback()).Throws<InvalidOperationException>().Verifiable();
-            connection.Setup(c => c.BeginTransaction()).Returns(transaction.Object).Verifiable();
+            connectionMock.Setup(c => c.BeginTransaction()).Returns(transactionMock.Object).Verifiable();
+            transactionMock.Setup(t => t.Rollback()).Throws<InvalidOperationException>().Verifiable();
 
-            using (var unitOfWork = new UnitOfWork(connection.Object))
+            using (var unitOfWork = new UnitOfWork(repositoryFactoryMock.Object, connectionMock.Object))
             {
                 // act
                 unitOfWork.Rollback();
 
                 // assert
-                connection.Verify();
-                transaction.Verify();
+                connectionMock.Verify();
+                transactionMock.Verify();
             }
         }
 
         [TestMethod]
-        public void CommitShouldSucceed()
+        public void Commit_ShouldSucceed()
         {
             // arrange
-            var connection = new Mock<IDbConnection>();
-            var transaction = new Mock<IDbTransaction>();
+            var connectionMock = new Mock<IDbConnection>();
+            var transactionMock = new Mock<IDbTransaction>();
+            var repositoryFactoryMock = new Mock<IRepositoryFactory>();
 
-            //transaction.SetupGet(t => t.Connection).Returns(connection.Object).Verifiable();
-            transaction.Setup(t => t.Commit()).Verifiable();
-            connection.Setup(c => c.BeginTransaction()).Returns(transaction.Object).Verifiable();
+            connectionMock.Setup(c => c.BeginTransaction()).Returns(transactionMock.Object).Verifiable();
+            transactionMock.Setup(t => t.Commit()).Verifiable();
 
-            using (var unitOfWork = new UnitOfWork(connection.Object))
+            using (var unitOfWork = new UnitOfWork(repositoryFactoryMock.Object, connectionMock.Object))
             {
                 // act
                 unitOfWork.Commit();
 
                 // assert
-                connection.Verify();
-                transaction.Verify();
+                connectionMock.Verify();
+                transactionMock.Verify();
             }
         }
 
         [TestMethod]
-        public void RollbackShouldSucceed()
+        public void Rollback_ShouldSucceed()
         {
             // arrange
-            var connection = new Mock<IDbConnection>();
-            var transaction = new Mock<IDbTransaction>();
+            var connectionMock = new Mock<IDbConnection>();
+            var transactionMock = new Mock<IDbTransaction>();
+            var repositoryFactoryMock = new Mock<IRepositoryFactory>();
+            
+            connectionMock.Setup(c => c.BeginTransaction()).Returns(transactionMock.Object).Verifiable();
+            transactionMock.Setup(t => t.Rollback()).Verifiable();
 
-            //transaction.SetupGet(t => t.Connection).Returns(connection.Object).Verifiable();
-            transaction.Setup(t => t.Rollback()).Verifiable();
-            connection.Setup(c => c.BeginTransaction()).Returns(transaction.Object).Verifiable();
-
-            using (var unitOfWork = new UnitOfWork(connection.Object))
+            using (var unitOfWork = new UnitOfWork(repositoryFactoryMock.Object, connectionMock.Object))
             {
                 // act
                 unitOfWork.Rollback();
 
                 // assert
-                connection.Verify();
-                transaction.Verify();
+                connectionMock.Verify();
+                transactionMock.Verify();
             }
         }
     }

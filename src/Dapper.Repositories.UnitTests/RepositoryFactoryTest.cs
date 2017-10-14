@@ -2,6 +2,7 @@
 {
     using System;
     using System.Data;
+    using Dapper.Repositories.UnitTests.Mocks;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
 
@@ -10,13 +11,13 @@
     {
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void CreateShouldThrowArgumentNullException()
+        public void Create_ShouldThrowArgumentNullException()
         {
             // arrange
             using (var factory = new RepositoryFactory())
             {
                 // act
-                factory.Create<object>(null);
+                factory.Create<TestEntity>(null);
 
                 // assert
                 // should throw exception
@@ -24,20 +25,19 @@
         }
 
         [TestMethod]
-        public void CreateShouldReturnInstance()
+        public void Create_ShouldReturnInstance()
         {
             // arrange
+            var connectionMock = new Mock<IDbConnection>();
+            var transactionMock = new Mock<IDbTransaction>();
+
             using (var factory = new RepositoryFactory())
             {
-                var connection = new Mock<IDbConnection>();
-                var transaction = new Mock<IDbTransaction>();
 
                 // act
-                var repository = factory.Create<object>(connection.Object, transaction.Object);
+                var repository = factory.Create<TestEntity>(connectionMock.Object, transactionMock.Object);
 
                 // assert
-                transaction.Verify();
-                connection.Verify();
                 Assert.IsNotNull(repository);
             }
         }
